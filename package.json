@@ -1,6 +1,6 @@
 {
-    "name": "BKchanger",
-    "version": "1.0.0",
+    "name": "bkchanger",
+    "version": "1.0.1",
     "description": "An Obsidian plugin that dynamically changes note background based on scroll position.",
     "main": "main.js",
     "scripts": {
