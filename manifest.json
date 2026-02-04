@@ -1,0 +1,10 @@
+{
+    "id": "BKchanger",
+    "name": "BK Changer",
+    "version": "1.0.0",
+    "minAppVersion": "0.15.0",
+    "description": "Change background image of note",
+    "author": "Nima",
+    "authorUrl": "https://github.com/BKchanger",
+    "isDesktopOnly": false
+}

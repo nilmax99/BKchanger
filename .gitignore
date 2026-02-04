@@ -1,0 +1,5 @@
+node_modules/
+.obsidian/
+main.js
+styles.css
+.DS_Store
