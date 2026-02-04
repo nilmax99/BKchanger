@@ -1,15 +1,67 @@
 import { Plugin, TFile, WorkspaceLeaf, ItemView, PluginSettingTab, App, Setting } from 'obsidian';
 
-// Plugin Settings Interface
+// ============================================================
+// 1. Central Configuration
+// ============================================================
+
+// Define all available styles and their display names here.
+// To add a new style, simply add a line to this object.
+const STYLE_DEFINITIONS = {
+    glass: 'Glass (Standard Blur)',
+    frost: 'Frost (Heavy Blur - Icy Look)',
+    mist: 'Mist (Light Blur - Steamy)',
+    crisp: 'Crisp (No Blur - Darker)',
+    card: 'Card (Solid - High Contrast)',
+    float: 'Float (Transparent)',
+    zen: 'Zen (Ultra Low Blur - Focus)',
+    off: 'Off (Disable Plugin)'
+} as const;
+
+// Automatically derive the StyleMode type from the keys above
+export type StyleMode = keyof typeof STYLE_DEFINITIONS;
+
+// ============================================================
+// 2. Style Manager Class (Helper)
+// ============================================================
+export class StyleManager {
+    // Get all style keys (glass, frost, etc.)
+    static get keys(): StyleMode[] {
+        return Object.keys(STYLE_DEFINITIONS) as StyleMode[];
+    }
+
+    // Get all CSS class names to remove (e.g., ['bg-style-glass', ...])
+    static get cssClasses(): string[] {
+        return this.keys.map(k => `bg-style-${k}`);
+    }
+
+    // Type Guard: Check if a string is a valid style mode
+    static isValid(value: string): value is StyleMode {
+        return value in STYLE_DEFINITIONS;
+    }
+
+    // Get the display label for settings
+    static getLabel(mode: StyleMode): string {
+        return STYLE_DEFINITIONS[mode];
+    }
+
+    // Get the specific CSS class for a mode
+    static getClass(mode: StyleMode): string {
+        return `bg-style-${mode}`;
+    }
+}
+
+// ============================================================
+// 3. Settings Interfaces
+// ============================================================
+
 interface PluginSettings {
-    styleMode: 'glass' | 'float' | 'card' | 'crisp' | 'off';
+    styleMode: StyleMode;
 }
 
 const DEFAULT_SETTINGS: PluginSettings = {
     styleMode: 'glass'
 }
 
-// Per-file Background Settings Interface
 interface BgSettings {
     path: string;
     blur: string;
@@ -17,21 +69,24 @@ interface BgSettings {
     size: string;
     position: string;
     repeat: string;
-    style?: 'glass' | 'float' | 'card' | 'crisp' | 'off';
+    style?: StyleMode;
 }
+
+// ============================================================
+// 4. Main Plugin Class
+// ============================================================
 
 export default class BackgroundPlugin extends Plugin {
     settings: PluginSettings;
     observer: IntersectionObserver;
 
     async onload() {
-        // Load settings
         await this.loadSettings();
 
         // Add Settings Tab
         this.addSettingTab(new BackgroundSettingTab(this.app, this));
 
-        // Apply global style class
+        // Apply global style to body
         this.updateStyleClass();
 
         // 1. Setup Scroll Observer
@@ -44,24 +99,24 @@ export default class BackgroundPlugin extends Plugin {
                     this.applySettingsToActiveLeaf(settings);
                 }
             }
-        }, {
-            threshold: 0.01,
-            rootMargin: "0px 0px -50% 0px"
-        });
+        }, { threshold: 0.01, rootMargin: "0px 0px -50% 0px" });
 
         // 2. Process 'bg' code blocks
         this.registerMarkdownCodeBlockProcessor("bg", (source, el, ctx) => {
             const settings = this.parseSettings(source, ctx.sourcePath);
-
             if (settings.path) {
                 const marker = el.createDiv({ cls: 'bg-marker' });
                 marker.dataset.settings = JSON.stringify(settings);
 
+                // Show info in Edit Mode
                 const info = marker.createDiv({ cls: 'bg-info' });
                 const rawName = settings.path.split('/').pop() || '';
                 const cleanName = rawName.split('?')[0];
                 info.innerText = `🖼 ${cleanName}`;
-                if (settings.blur !== '0px') info.createDiv({ text: `💧 Blur: ${settings.blur}`, cls: 'sub-text' });
+
+                if (settings.blur !== '0px') {
+                    info.createDiv({ text: `💧 Blur: ${settings.blur}`, cls: 'sub-text' });
+                }
 
                 this.observer.observe(marker);
             } else {
@@ -73,6 +128,7 @@ export default class BackgroundPlugin extends Plugin {
         this.registerEvent(
             this.app.workspace.on('active-leaf-change', (leaf) => {
                 this.resetBackground(leaf);
+                // Re-apply global class just in case
                 this.updateStyleClass();
             })
         );
@@ -80,9 +136,11 @@ export default class BackgroundPlugin extends Plugin {
 
     onunload() {
         if (this.observer) this.observer.disconnect();
-        document.body.classList.remove('bg-style-glass', 'bg-style-crisp', 'bg-style-card', 'bg-style-float', 'bg-style-off');
-        
-        
+
+        // Clean up global classes
+        document.body.classList.remove(...StyleManager.cssClasses);
+
+        // Remove created elements
         document.querySelectorAll('.custom-bg-layer').forEach(el => el.remove());
         document.querySelectorAll('.has-custom-bg').forEach(el => el.classList.remove('has-custom-bg'));
     }
@@ -93,13 +151,14 @@ export default class BackgroundPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
-        this.updateStyleClass(); 
+        this.updateStyleClass();
     }
 
-    // Applies the global CSS class based on user settings
     updateStyleClass() {
-        document.body.classList.remove('bg-style-glass', 'bg-style-crisp', 'bg-style-card', 'bg-style-float', 'bg-style-off');
-        document.body.classList.add(`bg-style-${this.settings.styleMode}`);
+        // Remove all possible style classes
+        document.body.classList.remove(...StyleManager.cssClasses);
+        // Add the current global style class
+        document.body.classList.add(StyleManager.getClass(this.settings.styleMode));
     }
 
     // --- Helper Functions ---
@@ -125,8 +184,9 @@ export default class BackgroundPlugin extends Plugin {
                 case 'repeat': settings.repeat = value; break;
 
                 case 'style':
-                    if (['glass', 'card' , 'float' ,'crisp', 'off'].includes(value)) {
-                        settings.style = value as 'glass' | 'float' | 'card' | 'crisp' | 'off';
+                    // Validate style using the manager
+                    if (StyleManager.isValid(value)) {
+                        settings.style = value;
                     }
                     break;
             }
@@ -147,12 +207,16 @@ export default class BackgroundPlugin extends Plugin {
         const container = (activeLeaf.view as ItemView).contentEl;
         container.classList.add('has-custom-bg');
 
-        container.classList.remove('bg-style-glass', 'bg-style-crisp', 'bg-style-card', 'bg-style-float', 'bg-style-off');
+        // Remove any previous style classes from this container
+        container.classList.remove(...StyleManager.cssClasses);
 
+        // Determine effective style (Note specific > Global setting)
         const effectiveStyle = settings.style || this.settings.styleMode;
-        container.classList.add(`bg-style-${effectiveStyle}`);
 
+        // Apply the new style class
+        container.classList.add(StyleManager.getClass(effectiveStyle));
 
+        // Create or update the background image layer
         let bgLayer = container.querySelector('.custom-bg-layer') as HTMLElement;
         if (!bgLayer) {
             bgLayer = document.createElement('div');
@@ -172,13 +236,21 @@ export default class BackgroundPlugin extends Plugin {
     resetBackground(leaf: WorkspaceLeaf | null) {
         if (!leaf || !leaf.view) return;
         const container = (leaf.view as any).contentEl;
+
         container.classList.remove('has-custom-bg');
+
+        // Remove all style classes
+        container.classList.remove(...StyleManager.cssClasses);
+
         const bgLayer = container.querySelector('.custom-bg-layer');
         if (bgLayer) bgLayer.remove();
     }
 }
 
-// Settings Tab Class
+// ============================================================
+// 5. Settings Tab
+// ============================================================
+
 class BackgroundSettingTab extends PluginSettingTab {
     plugin: BackgroundPlugin;
 
@@ -196,14 +268,20 @@ class BackgroundSettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName('Text Box Style')
             .setDesc('Choose the visual style for the text container.')
-            .addDropdown(dropdown => dropdown
-                .addOption('glass', 'Glass (Blur + Noise)')
-                .addOption('crisp', 'Crisp (Readable, No Banding)')
-                .addOption('off', 'Off (Image Only)')
-                .setValue(this.plugin.settings.styleMode)
-                .onChange(async (value) => {
-                    this.plugin.settings.styleMode = value as 'glass' | 'crisp' | 'off';
-                    await this.plugin.saveSettings();
-                }));
+            .addDropdown(dropdown => {
+                // Dynamically populate options from StyleManager
+                StyleManager.keys.forEach(key => {
+                    dropdown.addOption(key, StyleManager.getLabel(key));
+                });
+
+                dropdown
+                    .setValue(this.plugin.settings.styleMode)
+                    .onChange(async (value) => {
+                        if (StyleManager.isValid(value)) {
+                            this.plugin.settings.styleMode = value;
+                            await this.plugin.saveSettings();
+                        }
+                    });
+            });
     }
 }
