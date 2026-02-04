@@ -1,4 +1,5 @@
-import { Plugin, TFile, WorkspaceLeaf } from 'obsidian';
+import { Plugin, TFile, WorkspaceLeaf ,ItemView} from 'obsidian';
+
 
 interface BgSettings {
     path: string;
@@ -129,7 +130,8 @@ export default class BackgroundPlugin extends Plugin {
         const activeLeaf = this.app.workspace.activeLeaf;
         if (!activeLeaf || !activeLeaf.view) return;
 
-        const container = activeLeaf.view.contentEl;
+        // const container = activeLeaf.view.contentEl;
+        const container = (activeLeaf.view as ItemView).contentEl;
 
         // 1. Enable transparency mode
         container.classList.add('has-custom-bg');
@@ -160,7 +162,8 @@ export default class BackgroundPlugin extends Plugin {
 
     resetBackground(leaf: WorkspaceLeaf | null) {
         if (!leaf || !leaf.view) return;
-        const container = leaf.view.contentEl;
+        const container = (leaf.view as any).contentEl;
+        // const container = leaf.view.contentEl;
 
         // Remove transparency class
         container.classList.remove('has-custom-bg');

@@ -1,7 +1,7 @@
 {
     "id": "bkchanger",
     "name": "BKchanger",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "minAppVersion": "0.15.0",
     "description": "Dynamically changes note background based on scroll position.",
     "author": "Nima Abbaszadeh",
