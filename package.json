@@ -1,15 +1,31 @@
 {
     "name": "BKchanger",
     "version": "1.0.0",
-    "description": "Obsidian plugin",
+    "description": "An Obsidian plugin that dynamically changes note background based on scroll position.",
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs",
         "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
     },
-    "keywords": [],
-    "author": "",
+    "keywords": [
+        "obsidian",
+        "plugin",
+        "background",
+        "image",
+        "dynamic",
+        "scroll",
+        "wallpaper"
+    ],
+    "author": "Nima Abbaszadeh",
     "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/nilmax99/BKchanger.git"
+    },
+    "bugs": {
+        "url": "https://github.com/nilmax99/BKchanger/issues"
+    },
+    "homepage": "https://github.com/nilmax99/BKchanger#readme",
     "devDependencies": {
         "@types/node": "^16.11.6",
         "@typescript-eslint/eslint-plugin": "5.29.0",

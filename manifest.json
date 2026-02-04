@@ -1,10 +1,10 @@
 {
     "id": "BKchanger",
-    "name": "BK Changer",
+    "name": "BKchanger",
     "version": "1.0.0",
     "minAppVersion": "0.15.0",
-    "description": "Change background image of note",
-    "author": "Nima",
-    "authorUrl": "https://github.com/BKchanger",
+    "description": "Dynamically changes note background based on scroll position.",
+    "author": "Nima Abbaszadeh",
+    "authorUrl": "https://github.com/nilmax99",
     "isDesktopOnly": false
 }
