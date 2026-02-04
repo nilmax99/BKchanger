@@ -1,6 +1,15 @@
-import { Plugin, TFile, WorkspaceLeaf ,ItemView} from 'obsidian';
+import { Plugin, TFile, WorkspaceLeaf, ItemView, PluginSettingTab, App, Setting } from 'obsidian';
 
+// Plugin Settings Interface
+interface PluginSettings {
+    styleMode: 'glass' | 'float' | 'card' | 'crisp' | 'off';
+}
 
+const DEFAULT_SETTINGS: PluginSettings = {
+    styleMode: 'glass'
+}
+
+// Per-file Background Settings Interface
 interface BgSettings {
     path: string;
     blur: string;
@@ -8,19 +17,27 @@ interface BgSettings {
     size: string;
     position: string;
     repeat: string;
+    style?: 'glass' | 'float' | 'card' | 'crisp' | 'off';
 }
 
 export default class BackgroundPlugin extends Plugin {
+    settings: PluginSettings;
     observer: IntersectionObserver;
 
     async onload() {
-        this.addStyle();
+        // Load settings
+        await this.loadSettings();
+
+        // Add Settings Tab
+        this.addSettingTab(new BackgroundSettingTab(this.app, this));
+
+        // Apply global style class
+        this.updateStyleClass();
 
         // 1. Setup Scroll Observer
         this.observer = new IntersectionObserver((entries) => {
             const entry = entries.find(e => e.isIntersecting);
             if (entry) {
-                // Read settings stored in dataset
                 const settingsJson = (entry.target as HTMLElement).dataset.settings;
                 if (settingsJson) {
                     const settings: BgSettings = JSON.parse(settingsJson);
@@ -38,11 +55,8 @@ export default class BackgroundPlugin extends Plugin {
 
             if (settings.path) {
                 const marker = el.createDiv({ cls: 'bg-marker' });
-
-                // Store all settings as JSON in the element
                 marker.dataset.settings = JSON.stringify(settings);
 
-                // Show info in Edit Mode
                 const info = marker.createDiv({ cls: 'bg-info' });
                 const rawName = settings.path.split('/').pop() || '';
                 const cleanName = rawName.split('?')[0];
@@ -59,18 +73,33 @@ export default class BackgroundPlugin extends Plugin {
         this.registerEvent(
             this.app.workspace.on('active-leaf-change', (leaf) => {
                 this.resetBackground(leaf);
+                this.updateStyleClass();
             })
         );
     }
 
     onunload() {
         if (this.observer) this.observer.disconnect();
-        const style = document.getElementById('bg-adv-style');
-        if (style) style.remove();
-
-        // Remove created background layers
+        document.body.classList.remove('bg-style-glass', 'bg-style-crisp', 'bg-style-card', 'bg-style-float', 'bg-style-off');
+        
+        
         document.querySelectorAll('.custom-bg-layer').forEach(el => el.remove());
         document.querySelectorAll('.has-custom-bg').forEach(el => el.classList.remove('has-custom-bg'));
+    }
+
+    async loadSettings() {
+        this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    }
+
+    async saveSettings() {
+        await this.saveData(this.settings);
+        this.updateStyleClass(); 
+    }
+
+    // Applies the global CSS class based on user settings
+    updateStyleClass() {
+        document.body.classList.remove('bg-style-glass', 'bg-style-crisp', 'bg-style-card', 'bg-style-float', 'bg-style-off');
+        document.body.classList.add(`bg-style-${this.settings.styleMode}`);
     }
 
     // --- Helper Functions ---
@@ -78,40 +107,27 @@ export default class BackgroundPlugin extends Plugin {
     parseSettings(source: string, sourcePath: string): BgSettings {
         const lines = source.split('\n');
         const settings: BgSettings = {
-            path: '',
-            blur: '0px',
-            opacity: '1',
-            size: 'cover',
-            position: 'center center',
-            repeat: 'no-repeat'
+            path: '', blur: '0px', opacity: '1', size: 'cover', position: 'center center', repeat: 'no-repeat'
         };
 
         for (const line of lines) {
             const parts = line.split(':');
             if (parts.length < 2) continue;
-
             const key = parts[0].trim().toLowerCase();
-            const value = parts.slice(1).join(':').trim(); // Handle URLs containing ':'
+            const value = parts.slice(1).join(':').trim();
 
             switch (key) {
-                case 'path':
-                    settings.path = this.getImgPath(value, sourcePath) || '';
-                    break;
-                case 'blur':
-                    // Append 'px' if user only types a number
-                    settings.blur = value.endsWith('px') || value.endsWith('rem') || value === '0' ? value : value + 'px';
-                    break;
-                case 'opacity':
-                    settings.opacity = value;
-                    break;
-                case 'size':
-                    settings.size = value;
-                    break;
-                case 'position':
-                    settings.position = value;
-                    break;
-                case 'repeat':
-                    settings.repeat = value;
+                case 'path': settings.path = this.getImgPath(value, sourcePath) || ''; break;
+                case 'blur': settings.blur = value.endsWith('px') || value.endsWith('rem') || value === '0' ? value : value + 'px'; break;
+                case 'opacity': settings.opacity = value; break;
+                case 'size': settings.size = value; break;
+                case 'position': settings.position = value; break;
+                case 'repeat': settings.repeat = value; break;
+
+                case 'style':
+                    if (['glass', 'card' , 'float' ,'crisp', 'off'].includes(value)) {
+                        settings.style = value as 'glass' | 'float' | 'card' | 'crisp' | 'off';
+                    }
                     break;
             }
         }
@@ -120,9 +136,7 @@ export default class BackgroundPlugin extends Plugin {
 
     getImgPath(fileName: string, sourcePath: string): string | null {
         const file = this.app.metadataCache.getFirstLinkpathDest(fileName, sourcePath);
-        if (file instanceof TFile) {
-            return this.app.vault.getResourcePath(file);
-        }
+        if (file instanceof TFile) return this.app.vault.getResourcePath(file);
         return null;
     }
 
@@ -130,97 +144,66 @@ export default class BackgroundPlugin extends Plugin {
         const activeLeaf = this.app.workspace.activeLeaf;
         if (!activeLeaf || !activeLeaf.view) return;
 
-        // const container = activeLeaf.view.contentEl;
         const container = (activeLeaf.view as ItemView).contentEl;
-
-        // 1. Enable transparency mode
         container.classList.add('has-custom-bg');
 
-        // 2. Find or create specific background layer
-        // Create a separate div so blur doesn't affect text
+        container.classList.remove('bg-style-glass', 'bg-style-crisp', 'bg-style-card', 'bg-style-float', 'bg-style-off');
+
+        const effectiveStyle = settings.style || this.settings.styleMode;
+        container.classList.add(`bg-style-${effectiveStyle}`);
+
+
         let bgLayer = container.querySelector('.custom-bg-layer') as HTMLElement;
         if (!bgLayer) {
             bgLayer = document.createElement('div');
             bgLayer.className = 'custom-bg-layer';
-            // Prepend layer to container (behind everything)
             container.prepend(bgLayer);
         }
 
-        // 3. Apply styles to background layer
         bgLayer.style.backgroundImage = `url('${settings.path}')`;
         bgLayer.style.backgroundSize = settings.size;
         bgLayer.style.backgroundPosition = settings.position;
         bgLayer.style.backgroundRepeat = settings.repeat;
         bgLayer.style.opacity = settings.opacity;
-
-        // Apply Blur
         bgLayer.style.filter = `blur(${settings.blur})`;
-
-        // Smooth transition
         bgLayer.style.transition = 'all 0.5s ease-in-out';
     }
 
     resetBackground(leaf: WorkspaceLeaf | null) {
         if (!leaf || !leaf.view) return;
         const container = (leaf.view as any).contentEl;
-        // const container = leaf.view.contentEl;
-
-        // Remove transparency class
         container.classList.remove('has-custom-bg');
-
-        // Remove background layer if exists
         const bgLayer = container.querySelector('.custom-bg-layer');
-        if (bgLayer) {
-            bgLayer.remove();
-        }
+        if (bgLayer) bgLayer.remove();
+    }
+}
+
+// Settings Tab Class
+class BackgroundSettingTab extends PluginSettingTab {
+    plugin: BackgroundPlugin;
+
+    constructor(app: App, plugin: BackgroundPlugin) {
+        super(app, plugin);
+        this.plugin = plugin;
     }
 
-    addStyle() {
-        const css = `
-            /* === Editor Block Styles === */
-            .bg-marker {
-                padding: 8px; border: 1px dashed #555; border-radius: 6px;
-                background: rgba(0,0,0,0.2); margin: 10px 0; font-size: 0.8em;
-            }
-            .bg-info { font-weight: bold; color: var(--text-normal); }
-            .sub-text { font-weight: normal; color: var(--text-muted); font-size: 0.9em; }
-            .bg-error { color: #ff5555; }
+    display(): void {
+        const { containerEl } = this;
+        containerEl.empty();
 
-            /* Hide in Reading View */
-            .markdown-reading-view .bg-marker { 
-                display: block !important; height: 1px !important; opacity: 0 !important;
-                margin: 0 !important; padding: 0 !important; pointer-events: none; overflow: hidden;
-            }
+        containerEl.createEl('h2', { text: 'Dynamic Background Settings' });
 
-            /* === Custom Background Layer === */
-            .custom-bg-layer {
-                position: absolute;
-                top: 0; left: 0; right: 0; bottom: 0;
-                z-index: 0; /* Behind text */
-                pointer-events: none; /* Ignore clicks */
-            }
-
-            /* === Make Obsidian Layers Transparent === */
-            .has-custom-bg .view-content { background-color: transparent !important; }
-            
-            /* Ensure text sits above background layer */
-            .has-custom-bg .cm-editor, 
-            .has-custom-bg .markdown-reading-view {
-                position: relative;
-                z-index: 1; /* Above background */
-                background-color: transparent !important;
-            }
-
-            .has-custom-bg .markdown-preview-view { background: transparent !important; }
-        `;
-
-        const styleId = 'bg-adv-style';
-        let style = document.getElementById(styleId);
-        if (!style) {
-            style = document.createElement('style');
-            style.id = styleId;
-            document.head.appendChild(style);
-        }
-        style.textContent = css;
+        new Setting(containerEl)
+            .setName('Text Box Style')
+            .setDesc('Choose the visual style for the text container.')
+            .addDropdown(dropdown => dropdown
+                .addOption('glass', 'Glass (Blur + Noise)')
+                .addOption('crisp', 'Crisp (Readable, No Banding)')
+                .addOption('off', 'Off (Image Only)')
+                .setValue(this.plugin.settings.styleMode)
+                .onChange(async (value) => {
+                    this.plugin.settings.styleMode = value as 'glass' | 'crisp' | 'off';
+                    await this.plugin.saveSettings();
+                }));
     }
 }
