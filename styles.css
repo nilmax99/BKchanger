@@ -1,0 +1,281 @@
+/* styles.css */
+
+/* === Main Background Layer === */
+.custom-bg-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    pointer-events: none;
+    transform: translateZ(0);
+    /* Performance optimization */
+}
+
+/* === Reset Obsidian Default Backgrounds === */
+.has-custom-bg .view-content,
+.has-custom-bg .cm-editor,
+.has-custom-bg .markdown-reading-view {
+    background-color: transparent !important;
+}
+
+/* ============================================================
+   Mode 1: Glass (Modified for better visibility)
+   ============================================================ */
+.bg-style-glass .cm-content,
+.bg-style-glass .markdown-preview-view {
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    padding: 40px !important;
+    min-height: 95% !important;
+
+    /* Slightly more opaque (0.6) to distinguish from Off */
+    background-color: rgba(var(--mono-rgb-0), 0.6) !important;
+
+    /* Strong blur */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    border-radius: 16px;
+    border: 1px solid rgba(var(--mono-rgb-100), 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Noise for Glass */
+.bg-style-glass .cm-content::before,
+.bg-style-glass .markdown-preview-view::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAA5OTkAAABMTExERERmZmYzMzOZmZlmRg8lAAAACHRSTlMAMwA3M8MzM3Mz38gAAAAJcEhZcwAADsQAAA7EAZUrDhsAAABDSURBVDjL7dChAcAgDEMR+6/0CtUgCnI2QApl/xfqK65I5O7i7uXyQfROj/TInu3bvn3boz3aI/21R/u2b/v2b4/2yD7tA767B923wS2DAAAAAElFTkSuQmCC");
+    opacity: 0.12;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+}
+
+/* ============================================================
+   Mode 2: Card (New Mode - High Contrast)
+   Like a thick paper on the desk
+   ============================================================ */
+.bg-style-card .cm-content,
+.bg-style-card .markdown-preview-view {
+    max-width: 850px !important;
+    /* Slightly narrower */
+    margin: 20px auto !important;
+    padding: 50px !important;
+    min-height: 90% !important;
+
+    /* Almost solid color */
+    background-color: var(--background-primary) !important;
+
+    /* Thicker colored border (uses theme Accent color) */
+    border-left: 4px solid var(--interactive-accent);
+    border-right: 1px solid rgba(var(--mono-rgb-100), 0.1);
+    border-top: 1px solid rgba(var(--mono-rgb-100), 0.1);
+    border-bottom: 1px solid rgba(var(--mono-rgb-100), 0.1);
+
+    border-radius: 4px;
+    /* Sharper corners */
+
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* ============================================================
+   Mode 3: Crisp (Readable and no blur)
+   ============================================================ */
+.bg-style-crisp .cm-content,
+.bg-style-crisp .markdown-preview-view {
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    padding: 40px !important;
+    min-height: 95% !important;
+    background-color: rgba(var(--mono-rgb-0), 0.85) !important;
+    border-radius: 12px;
+    border: 1px solid rgba(var(--mono-rgb-100), 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+
+/* ============================================================
+   Mode 4: Float (Fully transparent - no border)
+   Text floats directly on the image.
+   ============================================================ */
+.bg-style-float .cm-content,
+.bg-style-float .markdown-preview-view {
+    /* Limit width so text doesn't stick to image corners */
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    padding: 40px !important;
+    min-height: 95% !important;
+
+    /* Remove background and border completely */
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    border: none !important;
+    box-shadow: none !important;
+
+    /* Optional: Text shadow for better readability on bright images */
+    /* text-shadow: 0 2px 4px rgba(0,0,0,0.8); */
+}
+
+/* Remove noise if present */
+.bg-style-float .cm-content::before,
+.bg-style-float .markdown-preview-view::before {
+    display: none !important;
+}
+
+
+/* ============================================================
+   Mode 5: Frost (Heavy Blur - Icy Look)
+   High readability, image details obscured.
+   ============================================================ */
+.bg-style-frost .cm-content,
+.bg-style-frost .markdown-preview-view {
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    padding: 40px !important;
+    min-height: 95% !important;
+
+    /* Background color slightly lighter/thicker */
+    background-color: rgba(var(--mono-rgb-0), 0.5) !important;
+
+    /* Heavy blur + High saturation */
+    backdrop-filter: blur(30px) saturate(160%);
+    -webkit-backdrop-filter: blur(30px) saturate(160%);
+
+    border-radius: 16px;
+    border: 1px solid rgba(var(--mono-rgb-100), 0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Noise for Frost (Optional) */
+.bg-style-frost .cm-content::before,
+.bg-style-frost .markdown-preview-view::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAGFBMVEUAAAA5OTkAAABMTExERERmZmYzMzOZmZlmRg8lAAAACHRSTlMAMwA3M8MzM3Mz38gAAAAJcEhZcwAADsQAAA7EAZUrDhsAAABDSURBVDjL7dChAcAgDEMR+6/0CtUgCnI2QApl/xfqK65I5O7i7uXyQfROj/TInu3bvn3boz3aI/21R/u2b/v2b4/2yD7tA767B923wS2DAAAAAElFTkSuQmCC");
+    opacity: 0.08;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+}
+
+/* ============================================================
+   Mode 6: Mist (Light Blur - Steamy)
+   Image details visible, just softened.
+   ============================================================ */
+.bg-style-mist .cm-content,
+.bg-style-mist .markdown-preview-view {
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    padding: 40px !important;
+    min-height: 95% !important;
+
+    /* Darker background to compensate for low blur */
+    background-color: rgba(var(--mono-rgb-0), 0.7) !important;
+
+    /* Very low blur */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+
+    border-radius: 12px;
+    border: 1px solid rgba(var(--mono-rgb-100), 0.1);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+
+
+/* ============================================================
+   Mode 7: Zen (Minimalist, Ultra Low Blur)
+   Just enough blur to soften edges, keeping the image very clear.
+   ============================================================ */
+.bg-style-zen .cm-content,
+.bg-style-zen .markdown-preview-view {
+    max-width: 900px !important;
+    margin: 0 auto !important;
+    padding: 40px !important;
+    min-height: 95% !important;
+
+    /* Very transparent background (30%) */
+    background-color: rgba(var(--mono-rgb-0), 0.3) !important;
+
+    /* Ultra weak blur (3px) */
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+
+    /* No border, just a soft shadow for separation */
+    border: none !important;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    /* Soft, spread-out shadow */
+}
+
+/* No noise needed for Zen mode as blur is low */
+.bg-style-zen .cm-content::before,
+.bg-style-zen .markdown-preview-view::before {
+    display: none !important;
+}
+
+
+
+/* ============================================================
+   Editor Elements (Code Block Styling)
+   ============================================================ */
+.bg-marker {
+    padding: 8px;
+    border: 1px dashed #555;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    margin: 10px 0;
+    font-size: 0.8em;
+}
+
+.bg-info {
+    font-weight: bold;
+    color: var(--text-normal);
+}
+
+.sub-text {
+    font-weight: normal;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.bg-error {
+    color: #ff5555;
+}
+
+.markdown-reading-view .bg-marker {
+    display: block !important;
+    height: 1px !important;
+    opacity: 0 !important;
+    margin: -1px 0 0 0 !important;
+    padding: 0 !important;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* Fix Scroll Padding to prevent content sticking to bottom */
+.cm-sizer {
+    padding-bottom: 300px !important;
+}
+
+
+
+
+/* === Global Transition for Style Changes === */
+
+.cm-content,
+.markdown-preview-view {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cm-content::before,
+.markdown-preview-view::before {
+    transition: opacity 0.5s ease;
+}

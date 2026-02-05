@@ -86,9 +86,6 @@ export default class BackgroundPlugin extends Plugin {
         // Add Settings Tab
         this.addSettingTab(new BackgroundSettingTab(this.app, this));
 
-        // Apply global style to body
-        this.updateStyleClass();
-
         // 1. Setup Scroll Observer
         this.observer = new IntersectionObserver((entries) => {
             const entry = entries.find(e => e.isIntersecting);
@@ -128,17 +125,12 @@ export default class BackgroundPlugin extends Plugin {
         this.registerEvent(
             this.app.workspace.on('active-leaf-change', (leaf) => {
                 this.resetBackground(leaf);
-                // Re-apply global class just in case
-                this.updateStyleClass();
             })
         );
     }
 
     onunload() {
         if (this.observer) this.observer.disconnect();
-
-        // Clean up global classes
-        document.body.classList.remove(...StyleManager.cssClasses);
 
         // Remove created elements
         document.querySelectorAll('.custom-bg-layer').forEach(el => el.remove());
@@ -151,14 +143,11 @@ export default class BackgroundPlugin extends Plugin {
 
     async saveSettings() {
         await this.saveData(this.settings);
-        this.updateStyleClass();
-    }
 
-    updateStyleClass() {
-        // Remove all possible style classes
-        document.body.classList.remove(...StyleManager.cssClasses);
-        // Add the current global style class
-        document.body.classList.add(StyleManager.getClass(this.settings.styleMode));
+        const leaf = this.app.workspace.activeLeaf;
+        if (leaf) {
+            this.resetBackground(leaf);
+        }
     }
 
     // --- Helper Functions ---
@@ -213,24 +202,43 @@ export default class BackgroundPlugin extends Plugin {
         // Determine effective style (Note specific > Global setting)
         const effectiveStyle = settings.style || this.settings.styleMode;
 
+        if (effectiveStyle === 'off') {
+            this.resetBackground(activeLeaf);
+            return;
+        }
+
         // Apply the new style class
         container.classList.add(StyleManager.getClass(effectiveStyle));
 
         // Create or update the background image layer
         let bgLayer = container.querySelector('.custom-bg-layer') as HTMLElement;
+        let isNewLayer = false;
+
         if (!bgLayer) {
             bgLayer = document.createElement('div');
             bgLayer.className = 'custom-bg-layer';
+
+            bgLayer.style.opacity = '0';
+
             container.prepend(bgLayer);
+            isNewLayer = true;
         }
 
         bgLayer.style.backgroundImage = `url('${settings.path}')`;
         bgLayer.style.backgroundSize = settings.size;
         bgLayer.style.backgroundPosition = settings.position;
         bgLayer.style.backgroundRepeat = settings.repeat;
-        bgLayer.style.opacity = settings.opacity;
         bgLayer.style.filter = `blur(${settings.blur})`;
+
         bgLayer.style.transition = 'all 0.5s ease-in-out';
+
+        if (isNewLayer) {
+            setTimeout(() => {
+                bgLayer.style.opacity = settings.opacity;
+            }, 50);
+        } else {
+            bgLayer.style.opacity = settings.opacity;
+        }
     }
 
     resetBackground(leaf: WorkspaceLeaf | null) {
@@ -238,12 +246,18 @@ export default class BackgroundPlugin extends Plugin {
         const container = (leaf.view as any).contentEl;
 
         container.classList.remove('has-custom-bg');
-
-        // Remove all style classes
         container.classList.remove(...StyleManager.cssClasses);
 
-        const bgLayer = container.querySelector('.custom-bg-layer');
-        if (bgLayer) bgLayer.remove();
+        const bgLayer = container.querySelector('.custom-bg-layer') as HTMLElement;
+        if (bgLayer) {
+            bgLayer.style.opacity = '0';
+
+            setTimeout(() => {
+                if (!container.classList.contains('has-custom-bg')) {
+                    bgLayer.remove();
+                }
+            }, 500);
+        }
     }
 }
 
