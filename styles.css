@@ -13,11 +13,6 @@
     /* Performance optimization */
 }
 
-/* body:not(.is-mobile) .has-custom-bg .cm-content,
-body:not(.is-mobile) .has-custom-bg .markdown-preview-view {
-    margin-bottom: 5px !important;
-} */
-
 /* === Reset Obsidian Default Backgrounds === */
 .has-custom-bg .view-content,
 .has-custom-bg .cm-editor,
@@ -287,68 +282,60 @@ body:not(.is-mobile) .has-custom-bg .markdown-preview-view {
 
 
 /* ============================================================
-   📱 FINAL MOBILE OPTIMIZATIONS (Based on Working Logic)
+   📱 & 💻 RESPONSIVE LOGIC
    ============================================================ */
 
-body.is-mobile .cm-content,
-body.is-mobile .markdown-preview-view {
-    max-width: none !important;
-    width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
+@media screen and (min-width: 952px) {
+    .has-custom-bg .markdown-preview-view {
+        min-height: 0 !important;
+        height: auto !important;
+
+        max-height: calc(100% - 35px) !important;
+        margin-top: 30px !important;
+        margin-bottom: 5px !important;
+
+        border-radius: 12px !important;
+    }
 }
 
+@media screen and (max-width: 951px) {
 
-body.is-mobile .has-custom-bg .cm-content,
-body.is-mobile .has-custom-bg .markdown-preview-view {
-    max-width: none !important;
-    width: 100% !important;
-    background-color: rgba(var(--mono-rgb-0), 0.5) !important;
-    border-radius: 0 !important;
-}
 
-/* Fix for Card Style on Mobile (Left strip only) */
-body.is-mobile .has-custom-bg.bg-style-card .cm-content,
-body.is-mobile .has-custom-bg.bg-style-card .markdown-preview-view {
-    border-top: none !important;
-    border-right: none !important;
-    border-bottom: none !important;
-    border-left-width: 4px !important;
-    box-shadow: none !important;
-    background-color: var(--background-primary) !important;
-}
+    .cm-content,
+    .markdown-preview-view,
+    .has-custom-bg .cm-content,
+    .has-custom-bg .markdown-preview-view {
 
-/* Fix for Glass/Frost/Mist/Crisp (Remove borders/shadows) */
-body.is-mobile .has-custom-bg.bg-style-glass .cm-content,
-body.is-mobile .has-custom-bg.bg-style-frost .cm-content,
-body.is-mobile .has-custom-bg.bg-style-mist .cm-content,
-body.is-mobile .has-custom-bg.bg-style-crisp .cm-content {
-    border: none !important;
-    box-shadow: none !important;
-}
+        max-width: none !important;
+        width: 100% !important;
 
-/* 4. Simulation Block for Desktop Testing (mobile-sim) */
-.mobile-sim .cm-content,
-.mobile-sim .markdown-preview-view,
-.mobile-sim .has-custom-bg .cm-content,
-.mobile-sim .has-custom-bg .markdown-preview-view {
-    max-width: none !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-}
 
-/* Simulation Fixes for Styles */
-.mobile-sim .has-custom-bg.bg-style-card .cm-content {
-    border-left-width: 4px !important;
-    border-right: none !important;
-    box-shadow: none !important;
-}
+        margin: 0 !important;
 
-.mobile-sim .has-custom-bg.bg-style-glass .cm-content {
-    border: none !important;
-    box-shadow: none !important;
+
+        padding: 15px !important;
+
+
+        min-height: 100% !important;
+
+        border-radius: 0 !important;
+    }
+
+
+    .has-custom-bg.bg-style-glass .cm-content,
+    .has-custom-bg.bg-style-frost .cm-content,
+    .has-custom-bg.bg-style-mist .cm-content,
+    .has-custom-bg.bg-style-crisp .cm-content,
+    .has-custom-bg.bg-style-card .cm-content {
+        border: none !important;
+        box-shadow: none !important;
+
+        background-color: rgba(var(--mono-rgb-0), 0.5) !important;
+    }
+
+
+    .has-custom-bg.bg-style-card .cm-content {
+        border-left: 4px solid var(--interactive-accent) !important;
+        background-color: var(--background-primary) !important;
+    }
 }
