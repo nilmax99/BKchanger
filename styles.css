@@ -282,51 +282,51 @@
 
 
 /* ============================================================
-   📱 & 💻 RESPONSIVE LOGIC
+   📱 & 💻 RESPONSIVE LOGIC (MERGED & CLEANED)
    ============================================================ */
+
 
 @media screen and (min-width: 952px) {
     .has-custom-bg .markdown-preview-view {
         min-height: 0 !important;
         height: auto !important;
-
         max-height: calc(100% - 35px) !important;
         margin-top: 30px !important;
         margin-bottom: 5px !important;
-
         border-radius: 12px !important;
     }
 }
 
+
 @media screen and (max-width: 951px) {
 
 
-    .cm-content,
-    .markdown-preview-view,
-    .has-custom-bg .cm-content,
-    .has-custom-bg .markdown-preview-view {
-
+    body .has-custom-bg .cm-sizer {
         max-width: none !important;
         width: 100% !important;
-
-
         margin: 0 !important;
+    }
+
+    body .has-custom-bg .cm-scroller {
+        padding: 0 !important;
+    }
 
 
-        padding: 15px !important;
-
-
-        min-height: 100% !important;
-
+    body .has-custom-bg .cm-content,
+    body .has-custom-bg .markdown-preview-view {
+        max-width: none !important;
+        width: 100% !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+        margin: 0 !important;
         border-radius: 0 !important;
     }
 
 
-    .has-custom-bg.bg-style-glass .cm-content,
-    .has-custom-bg.bg-style-frost .cm-content,
-    .has-custom-bg.bg-style-mist .cm-content,
-    .has-custom-bg.bg-style-crisp .cm-content,
-    .has-custom-bg.bg-style-card .cm-content {
+    body .has-custom-bg.bg-style-glass .cm-content,
+    body .has-custom-bg.bg-style-frost .cm-content,
+    body .has-custom-bg.bg-style-mist .cm-content,
+    body .has-custom-bg.bg-style-crisp .cm-content {
         border: none !important;
         box-shadow: none !important;
 
@@ -334,8 +334,13 @@
     }
 
 
-    .has-custom-bg.bg-style-card .cm-content {
+    body .has-custom-bg.bg-style-card .cm-content {
+        border-top: none !important;
+        border-right: none !important;
+        border-bottom: none !important;
         border-left: 4px solid var(--interactive-accent) !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
         background-color: var(--background-primary) !important;
     }
 }
